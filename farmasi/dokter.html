@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input E-Resep (Dokter)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom scrollbar agar rapi di layout full page */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translate3d(0, -10px, 0); }
+            to { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+        .animate-fade-in-down { animation: fadeInDown 0.3s ease-out; }
+    </style>
+
+</head>
+<body class="bg-slate-100 h-screen w-full flex overflow-hidden font-sans text-slate-800">
+
+    <div class="w-3/4 h-full bg-white border-r border-slate-200 overflow-y-auto custom-scrollbar p-5">
+        
+        <div class="flex items-center gap-4 mb-6 border-b border-slate-100 pb-4 sticky top-0 bg-white z-10 pt-2">
+            <div id="role-icon" class="bg-blue-600 text-white p-3 rounded-xl shadow-md transition-colors">
+                <i class="fa-solid fa-user-doctor text-xl"></i>
+            </div>
+            <div class="flex-1 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">Input E-Resep</h1>
+                    <p class="text-xs text-slate-400">Farmasi & Rekam Medis Terintegrasi</p>
+                </div>
+            
+                <div class="flex gap-2 bg-slate-50 p-1.5 rounded-lg inline-flex items-center">
+                    <select id="user-role" onchange="changeRole()" class="text-xs p-2 border border-slate-200 rounded-md bg-white font-bold text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer transition hover:border-blue-300 h-10">
+                        <option value="Doctor">Dokter</option>
+                        <option value="Nurse">Perawat</option>
+                    </select>
+
+                    <div class="relative w-72">
+                        <i class="fa-solid fa-stethoscope absolute left-3 top-3 text-slate-400 text-xs"></i>
+                        <select id="doctor-name-select" class="w-full pl-8 pr-3 py-2 text-xs border border-slate-200 rounded-md bg-white text-slate-700 font-bold placeholder:text-slate-300 focus:ring-2 focus:ring-blue-500 outline-none transition hover:border-blue-300 h-10 appearance-none">
+                            <option value="">-- Memuat Data Dokter... --</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-slate-400 text-xs pointer-events-none"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full"> 
+            <div class="mb-6 bg-blue-50/50 p-5 rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition">
+                <label class="block text-sm font-bold text-slate-700 mb-2 flex items-center">
+                    <i class="fa-solid fa-hospital-user mr-2 text-blue-500"></i> Cari Pasien
+                </label>
+                <div class="relative">
+                    <i class="fa-solid fa-search absolute left-4 top-4 text-slate-400 text-lg"></i>
+                    <input list="patient-list-options" id="patient-search-input" 
+                           class="w-full pl-12 p-3.5 border border-blue-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 shadow-sm text-lg transition placeholder:text-slate-300"
+                           placeholder="Ketik Nama / No. RM Pasien..." onchange="selectPatient()">
+                    <datalist id="patient-list-options"></datalist>
+                </div>
+                <input type="hidden" id="selected-patient-id">
+                
+                <div id="patient-selected-info" class="mt-3 text-sm text-green-700 font-bold hidden animate-fade-in-down flex items-center gap-3 bg-green-100/50 p-2 rounded-lg border border-green-200">
+                    <i class="fa-solid fa-check-circle text-green-600 ml-1"></i>
+                    <span>Pasien Terpilih: <span id="selected-name-display" class="text-slate-900 text-base ml-1 underline decoration-green-300 decoration-2"></span></span>
+                </div>
+            </div>
+
+            <div class="space-y-4 mb-6 p-5 bg-slate-50 rounded-xl border border-slate-200">
+                <h2 class="font-bold text-slate-700 flex items-center text-lg mb-4">
+                    <i class="fa-solid fa-pills mr-2 text-slate-500"></i> Input Obat
+                </h2>
+                <div>
+                    <label class="block text-sm font-bold text-slate-600 mb-2">Nama Obat / Stok</label>
+                    <select id="drug-select" class="w-full p-3 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-slate-700 font-medium transition hover:border-blue-300 cursor-pointer">
+                        <option value="">-- Sedang memuat data obat... --</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-4 items-end">
+                    <div class="w-32">
+                        <label class="block text-sm font-bold text-slate-600 mb-2 text-center">Jumlah (Qty)</label>
+                        <div class="relative">
+                             <input type="number" id="drug-qty" value="1" min="1" class="w-full p-3 border border-slate-300 rounded-lg bg-white text-center font-bold text-xl focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-slate-700 transition hover:border-blue-300">
+                             <span class="absolute right-3 top-4 text-xs text-slate-400 font-bold">PCS</span>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <button onclick="addToList()" class="w-full bg-slate-800 text-white hover:bg-slate-900 px-6 py-4 rounded-lg font-bold transition shadow-md flex justify-center items-center gap-3 text-lg hover:shadow-lg active:scale-[0.99]">
+                            <i class="fa-solid fa-cart-plus text-xl"></i> Tambah ke Resep
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div class="w-1/4 h-full bg-slate-50 border-l border-slate-200 p-4 flex flex-col shadow-inner">
+        
+        <div class="mb-3 border-b border-slate-200 pb-2">
+            <h3 class="text-base font-bold text-slate-700 flex items-center">
+                <i class="fa-solid fa-receipt mr-2 text-blue-600"></i> Rincian Resep
+            </h3>
+            <p class="text-xs text-slate-400">Pastikan daftar obat sudah benar sebelum dikirim.</p>
+        </div>
+
+        <div class="flex-1 overflow-hidden flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm mb-4 relative">
+            <div class="bg-slate-100 p-3 text-xs font-bold text-slate-500 flex justify-between border-b border-slate-200">
+                <span>Nama Obat</span>
+                <span>Qty / Aksi</span>
+            </div>
+            
+            <ul id="temp-list" class="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar relative">
+                <li id="empty-cart-state" class="absolute inset-0 flex flex-col justify-center items-center text-slate-300 italic p-4">
+                    <i class="fa-solid fa-basket-shopping text-5xl mb-4 opacity-30"></i>
+                    <span class="font-medium">Belum ada obat ditambahkan</span>
+                    <span class="text-xs mt-1">Pilih obat di kolom kiri lalu klik tambah.</span>
+                </li>
+            </ul>
+            
+            <div id="cart-summary-footer" class="bg-slate-50 p-3 text-xs font-bold text-slate-500 border-t border-slate-200 text-right hidden">
+                Total Item: <span id="total-items-count" class="text-slate-700">0</span>
+            </div>
+        </div>
+
+        <div>
+            <button onclick="submitResep()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200/50 transition transform hover:-translate-y-1 active:scale-[0.98] text-lg flex items-center justify-center group relative overflow-hidden">
+                 <span class="absolute inset-0 w-full h-full bg-white/20 group-hover:scale-x-100 scale-x-0 transition-transform origin-left duration-300"></span>
+                <i class="fa-solid fa-paper-plane mr-3 text-xl relative z-10"></i> 
+                <span class="relative z-10">KIRIM RESEP</span>
+            </button>
+            <p class="text-center text-xs text-slate-400 mt-3">
+                <i class="fa-solid fa-info-circle mr-1"></i> Data akan langsung terkirim ke Farmasi & Kasir.
+            </p>
+        </div>
+
+    </div>
+
+
+    <script>
+        let cart = [];
+        let drugDatabase = [];
+        const API_URL = 'https://farmasi-cjmi.onrender.com/api'; // Production: Render
+
+        // --- 1. SETUP AWAL ---
+        window.onload = function() {
+            fetchAllPatients(); 
+            fetchDrugs();       
+            fetchDoctors(); // Load Dokter saat awal buka
+        };
+
+        // --- 2. LOAD PASIEN ---
+        async function fetchAllPatients() {
+            try {
+                // Endpoint backend: /api/patients-list)
+                const response = await fetch(`${API_URL}/patients-list`);
+                const result = await response.json();
+                
+                const datalist = document.getElementById('patient-list-options');
+                datalist.innerHTML = ''; 
+
+                if(result.status === 'success') {
+                    console.log(`✅ Loaded ${result.data.length} patients`);
+                    result.data.forEach(p => {
+                        const option = document.createElement('option');
+                        option.value = `${p.full_name} (${p.mr_no})`; 
+                        option.setAttribute('data-id', p.id); 
+                        datalist.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Gagal load pasien:', error);
+            }
+        }
+
+        // 2. PILIH PASIEN (Dipanggil saat mengetik/memilih - oninput)
+        function selectPatient() {
+            const inputVal = document.getElementById('patient-search-input').value;
+            const datalist = document.getElementById('patient-list-options');
+            const hiddenId = document.getElementById('selected-patient-id');
+            const infoDisplay = document.getElementById('patient-selected-info');
+            
+            let foundId = null;
+            for (let i = 0; i < datalist.options.length; i++) {
+                if (datalist.options[i].value === inputVal) {
+                    foundId = datalist.options[i].getAttribute('data-id');
+                    break;
+                }
+            }
+
+            if (foundId) {
+                hiddenId.value = foundId;
+                document.getElementById('selected-name-display').innerText = inputVal.split('(')[0];
+                infoDisplay.classList.remove('hidden');
+                infoDisplay.classList.add('animate-fade-in-down');
+                console.log("✅ Pasien Terpilih ID:", foundId); // Debugging Log
+            } else {
+                hiddenId.value = "";
+                infoDisplay.classList.add('hidden');
+            }
+        }
+
+        // --- 3. LOAD OBAT ---
+        async function fetchDrugs() {
+            const select = document.getElementById('drug-select');
+            select.innerHTML = '<option>Sedang memuat...</option>';
+                
+            try {
+                // Panggil endpoint yang benar: /api/drugs-list
+                const response = await fetch(`${API_URL}/drugs-list`);
+                const result = await response.json();
+                
+                const select = document.getElementById('drug-select');
+                
+                if (result.status === 'success') {
+                    select.innerHTML = '<option value="">-- Pilih Obat --</option>';
+                    
+                    result.data.forEach(drug => {
+                        let stockInfo = `(Stok: ${drug.stock})`;
+                        let style = "";
+                        
+                        if(drug.stock === 0) {
+                            stockInfo = "(HABIS)";
+                            style = "color: red; font-weight: bold;";
+                        }
+
+                        // Tampilkan Harga Jual (drug.price dari backend)
+                        const priceDisplay = drug.price 
+                            ? ` - Rp${parseInt(drug.price).toLocaleString('id-ID')}` 
+                            : '';
+
+                        const option = document.createElement('option');
+                        option.value = drug.id; // ID Obat (UUID)
+                        option.text = `${drug.name} ${stockInfo}${priceDisplay}`;
+                        option.style = style;
+                        
+                        // Simpan harga di dataset untuk perhitungan cart
+                        option.dataset.price = drug.price; 
+                        option.dataset.stock = drug.stock;
+
+                        if(drug.stock === 0) option.disabled = true;
+
+                        select.appendChild(option);
+                    });
+                } else {
+                    select.innerHTML = '<option>Gagal memuat data obat</option>';
+                }
+            } catch (error) {
+                console.error("Gagal load obat:", error);
+                document.getElementById('drug-select').innerHTML = '<option>Error Server</option>';
+            }
+        }
+        
+        // --- 4. CART LOGIC ---
+        function addToList() {
+            const select = document.getElementById('drug-select');
+            const qtyInput = document.getElementById('drug-qty');
+            const qty = parseInt(qtyInput.value); 
+            const drugId = select.value;
+
+            if(!drugId) { alert("Pilih obat dulu!"); return; }
+            if(qty <= 0) return;
+
+            // Ambil data dari option yang dipilih
+            const selectedOption = select.options[select.selectedIndex];
+            let rawText = selectedOption.text;
+            let drugName = rawText.split('(')[0].trim();
+            // Ambil harga dan stok dari dataset
+            let price = parseInt(selectedOption.dataset.price) || 0;
+            let stock = parseInt(selectedOption.dataset.stock) || 0;
+
+            if (qty > stock) {
+                alert(`Stok tidak cukup! Sisa stok: ${stock}`);
+                return;
+            }
+
+            const existingItem = cart.find(item => item.id === drugId);
+            if (existingItem) {
+                if (existingItem.qty + qty > stock) {
+                    alert(`Total qty melebihi stok! Sisa stok: ${stock}`);
+                    return;
+                }
+                existingItem.qty += qty; 
+            } else {
+                // Simpan juga harga di item cart jika diperlukan untuk perhitungan total di frontend (opsional)
+                cart.push({ id: drugId, qty: qty, name: drugName, price: price });
+            }
+
+            qtyInput.value = 1;
+            renderCart();
+        }
+
+        function renderCart() {
+            const ul = document.getElementById('temp-list');
+            const emptyState = document.getElementById('empty-cart-state');
+            const summaryFooter = document.getElementById('cart-summary-footer');
+            const totalItemsCount = document.getElementById('total-items-count');
+            
+            // Bersihkan list item (tapi jangan hapus empty state dulu)
+            Array.from(ul.children).forEach(child => {
+                if (child.id !== 'empty-cart-state') {
+                    ul.removeChild(child);
+                }
+            });
+            
+            if(cart.length === 0) {
+                emptyState.classList.remove('hidden');
+                summaryFooter.classList.add('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+                summaryFooter.classList.remove('hidden');
+            }
+
+            let totalQty = 0;
+            cart.forEach((item, index) => {
+                totalQty += item.qty;
+                const li = document.createElement('li');
+                li.className = "flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-100 hover:bg-blue-50 transition group text-sm";
+                li.innerHTML = `
+                    <div class="flex items-center overflow-hidden">
+                        <span class="font-bold text-slate-700 truncate mr-2">${item.name}</span>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="bg-white border border-slate-200 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">x${item.qty}</span>
+                        <button onclick="removeFromCart(${index})" class="text-slate-300 hover:text-red-500 transition"><i class="fa-solid fa-times-circle"></i></button>
+                    </div>
+                `;
+                ul.appendChild(li);
+            });
+            totalItemsCount.innerText = totalQty;
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        // --- 5. FUNGSI SUBMIT RESEP (FIXED) ---
+        async function submitResep() {
+            if (cart.length === 0) {
+                alert("Keranjang resep masih kosong!");
+                return;
+            }
+
+            const patientId = document.getElementById('selected-patient-id').value;
+            if (!patientId) {
+                alert("⚠️ Harap PILIH PASIEN terlebih dahulu di kolom kiri!");
+                document.getElementById('patient-search-input').focus();
+                return;
+            }
+
+            // [PERBAIKAN DISINI] Ambil ID Dokter dari value dropdown yang sudah diperbaiki
+            const doctorId = document.getElementById('doctor-name-select').value;
+
+            if (!doctorId) {
+                alert("⚠️ Pilih Nama Dokter!");
+                return;
+            }
+
+            // Efek Loading Tombol
+            const btn = document.querySelector('button[onclick="submitResep()"]');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2 text-xl"></i> Mengirim Data...';
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            btn.disabled = true;
+
+            // --- MULAI PROSES KIRIM ---
+            try {
+                // Struktur payload disesuaikan dengan endpoint /api/submit-prescription di server.js
+                const payload = {
+                    patient_id: patientId,
+                    doctor_id: doctorId, 
+                    items: cart.map(item => ({
+                        drug_id: item.id, // Mapping id cart -> drug_id backend
+                        qty: item.qty
+                    }))
+                };
+
+                const response = await fetch(`${API_URL}/submit-prescription`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                console.log("✅ SERVER RESPONSE:", result);
+
+                if (result.status === 'success') {
+                    let msg = "✅ Resep Berhasil Terkirim ke Farmasi!";
+                    if (result.invoice_id) {
+                        msg += `\nTagihan dibuat (ID: ${result.invoice_id.substring(0, 8)}...)`;
+                    }
+                    alert(msg);
+
+                    // Reset Form
+                    cart = [];
+                    renderCart();
+                    document.getElementById('patient-search-input').value = '';
+                    document.getElementById('selected-patient-id').value = '';
+                    document.getElementById('patient-selected-info').classList.add('hidden');
+                } else {
+                    alert("❌ Gagal Mengirim: " + (result.message || result.error));
+                }
+
+            } catch (error) {
+                console.error("Error submit:", error);
+                alert("Error koneksi ke server: " + error.message);
+            } finally {
+                // Balikin Tombol seperti semula
+                btn.innerHTML = originalContent;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                btn.disabled = false;
+            }
+        }
+
+        // UI Helper
+        function changeRole() {
+            const role = document.getElementById('user-role').value;
+            const iconBox = document.getElementById('role-icon');
+            if (role === 'Nurse') {
+                iconBox.innerHTML = '<i class="fa-solid fa-user-nurse text-xl"></i>';
+                iconBox.className = "bg-pink-500 text-white p-3 rounded-xl shadow-md transition-colors";
+            } else {
+                iconBox.innerHTML = '<i class="fa-solid fa-user-doctor text-xl"></i>';
+                iconBox.className = "bg-blue-600 text-white p-3 rounded-xl shadow-md transition-colors";
+            }
+        }
+
+        // --- FETCH DOKTER DARI DB (FIXED) ---
+        async function fetchDoctors() {
+            try {
+                const response = await fetch(`${API_URL}/doctors-list`);
+                const result = await response.json();
+                
+                const select = document.getElementById('doctor-name-select');
+                select.innerHTML = '<option value="">-- Pilih Dokter --</option>'; 
+
+                if (result.status === 'success') {
+                    result.data.forEach(doc => {
+                        const option = document.createElement('option');
+                        // Tampilkan Nama + Spesialisasi biar jelas
+                        option.value = doc.id; 
+                        option.text = `${doc.name} - ${doc.specialization}`;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Gagal load dokter:', error);
+                document.getElementById('doctor-name-select').innerHTML = '<option>Gagal Koneksi Server</option>';
+            }
+        }
+    </script>
+</body>
+</html>
